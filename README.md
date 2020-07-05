@@ -1,4 +1,4 @@
-# gokitdemo
+# go-kit demo
 执行 go build maim.go && ./main
 
 使用POSTMAN执行如下:
