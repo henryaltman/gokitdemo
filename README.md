@@ -6,6 +6,9 @@ post http://127.0.0.1:9000/calculate/Add/10/1
 
 得到如下结果:
 {
-     "result": 11,
-     "error": null
+     "code": 0,
+     "msg": "OK",
+     "data": {
+          "add": 11
+     }
 }
