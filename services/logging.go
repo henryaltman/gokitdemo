@@ -3,9 +3,11 @@
 package services
 
 import (
-	"time"
+	"context"
+	"gokitdemo/dto"
 
 	"github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/metrics"
 )
 
 type loggingMiddleware struct {
@@ -13,9 +15,19 @@ type loggingMiddleware struct {
 	logger log.Logger
 }
 
-// func newService() BasicService {
-// 	svc := BasicService{}
-// 	return svc
+type metricMiddleware struct {
+	Service
+	requestCount   metrics.Counter
+	requestLatency metrics.Histogram
+}
+
+// func Metrics(requestCount metrics.Counter, requestLatency metrics.Histogram) ServiceMiddleware {
+// 	return func(next Service) Service {
+// 		return metricMiddleware{
+// 			next,
+// 			requestCount,
+// 			requestLatency}
+// 	}
 // }
 
 // LoggingMiddleware make logging middleware
@@ -24,18 +36,14 @@ func LoggingMiddleware(logger log.Logger) loggingMiddleware {
 	return loggingMiddleware{svc, logger}
 }
 
-func (mw loggingMiddleware) Add(a, b int) (ret int) {
+func (mw loggingMiddleware) Add(ctx context.Context, r dto.AddRequest) (ret dto.AddResponse, err error) {
 
-	defer func(beign time.Time) {
-		mw.logger.Log(
-			"function", "Add",
-			"a", a,
-			"b", b,
-			"result", ret,
-			"took", time.Since(beign),
-		)
-	}(time.Now())
+	// defer func(beign time.Time) {
+	// 	lvs := []string{"method", "Add"}
+	// 	mw.requestCount.With(lvs...).Add(1)
+	// 	mw.requestLatency.With(lvs...).Observe(time.Since(beign).Seconds())
+	// }(time.Now())
 
-	ret = mw.Service.Add(a, b)
-	return ret
+	ret, err = mw.Service.Add(ctx, r)
+	return ret, err
 }

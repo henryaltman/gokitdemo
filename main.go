@@ -7,12 +7,15 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"gokitdemo/endpoints"
+	"gokitdemo/rtlimit"
 	"gokitdemo/services"
 	"gokitdemo/transports"
 
 	"github.com/go-kit/kit/log"
+	"github.com/juju/ratelimit"
 )
 
 func main() {
@@ -29,6 +32,9 @@ func main() {
 	svcs := services.LoggingMiddleware(logger)
 
 	endpoint := endpoints.MakeBasicEndpoint(svcs)
+	// add ratelimit,refill every second,set capacity 3
+	ratebucket := ratelimit.NewBucket(time.Second*1, 1)
+	endpoint = rtlimit.NewTokenBucketLimitterWithJuju(ratebucket)(endpoint)
 
 	r := transports.MakeKitHttpHandler(ctx, endpoint, logger)
 

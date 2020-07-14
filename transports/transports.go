@@ -4,12 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"io/ioutil"
 
 	//"log"
 	"net/http"
-	"strconv"
 
-	"gokitdemo/endpoints"
+	"gokitdemo/dto"
 
 	//"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/endpoint"
@@ -20,32 +21,37 @@ import (
 	kitHttp "github.com/go-kit/kit/transport/http"
 )
 
+func encodeLoginResponse(ctx context.Context, w http.ResponseWriter, response interface{}) error {
+	w.Header().Set("Content-Type", "application/json;charset=utf-8")
+	return json.NewEncoder(w).Encode(response)
+}
+
 // decodeArithmeticRequest decode request params to struct
 func decodeBasicRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	vars := mux.Vars(r)
-	requestType, ok := vars["type"]
-	if !ok {
-		return nil, ErrorBadRequest
+
+	bodyBytes, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		fmt.Println("err", err)
+		return nil, errors.New("read body data error")
+	}
+	fmt.Println("body", string(bodyBytes))
+	bodyMap := make(map[string]interface{})
+	err = json.Unmarshal(bodyBytes, &bodyMap)
+	if err != nil {
+		fmt.Println("err", err)
+		return nil, errors.New("parse body data error")
 	}
 
-	pa, ok := vars["a"]
-	if !ok {
-		return nil, ErrorBadRequest
+	if _, ok := bodyMap["request_id"]; !ok {
+		return nil, errors.New("parse body request_id required error")
 	}
 
-	pb, ok := vars["b"]
-	if !ok {
-		return nil, ErrorBadRequest
+	if _, ok := bodyMap["request_type"]; !ok {
+		return nil, errors.New("parse body request_type required error")
 	}
 
-	a, _ := strconv.Atoi(pa)
-	b, _ := strconv.Atoi(pb)
-
-	return endpoints.BasicRequest{
-		RequestType: requestType,
-		A:           a,
-		B:           b,
-	}, nil
+	request := dto.BasicRequest{RequestId: bodyMap["request_id"].(string), RequestType: bodyMap["request_type"].(string), Data: bodyMap["req"]}
+	return request, nil
 }
 
 // encodeArithmeticResponse encode response to return
@@ -61,13 +67,21 @@ var (
 // MakeHttpHandler make http handler use mux
 func MakeKitHttpHandler(ctx context.Context, endpoint endpoint.Endpoint, logger log.Logger) http.Handler {
 	r := mux.NewRouter()
-
+	rBytes, _ := json.Marshal(r)
+	fmt.Println("r", string(rBytes))
 	options := []kitHttp.ServerOption{
 		kitHttp.ServerErrorLogger(logger),
 		kitHttp.ServerErrorEncoder(kitHttp.DefaultErrorEncoder),
 	}
 
-	r.Methods("POST").Path("/calculate/{type}/{a}/{b}").Handler(kitHttp.NewServer(
+	r.Methods("POST").Path("/add/").Handler(kitHttp.NewServer(
+		endpoint,
+		decodeBasicRequest,
+		encodeBasicResponse,
+		options...,
+	))
+
+	r.Methods("POST").Path("/sub/").Handler(kitHttp.NewServer(
 		endpoint,
 		decodeBasicRequest,
 		encodeBasicResponse,
