@@ -21,7 +21,7 @@ func (s BasicService) Subtract(ctx context.Context, r interface{}) BaseResponse 
 	fmt.Println("rByte", string(rByte))
 	err = json.Unmarshal(rByte, &req)
 
-	rs.Sum = req.A + req.B
+	rs.Sum = req.A - req.B
 
 	br.Rs = rs
 	rsByte, err := json.Marshal(rs)

@@ -12,24 +12,16 @@ import (
 	"github.com/go-kit/kit/endpoint"
 )
 
-const (
-	RequestTypeAdd      = "Add"
-	RequestTypeSub      = "sub"
-	RequestTypeMultiply = "multiply"
-	RequestTypeDivide   = "divide"
-)
-
 // MakeBasicEndpoint make endpoint
-//todo
 func MakeBasicEndpoint(svc services.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(dto.BasicRequest)
 		fmt.Println("req", req)
 		result := dto.BasicResponse{}
 		if callResult := callReflect(svc, req.RequestType, ctx, req.Data); callResult != nil {
-			callResultByte , _ := json.Marshal(callResult[0].Interface())
+			callResultByte, _ := json.Marshal(callResult[0].Interface())
 			br := services.BaseResponse{}
-			err = json.Unmarshal(callResultByte,&br)
+			err = json.Unmarshal(callResultByte, &br)
 			if err != nil {
 				result.Msg = err.Error()
 			}
