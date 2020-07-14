@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	callReflectMethod("Chu", 1, 0)
+	callReflectMethod("Chu", 1, 1)
 }
 
 type Base struct {
@@ -69,7 +69,7 @@ func callReflectMethod(method string, args ...interface{}) {
 
 	result1 := callReflect(&Test{}, method, args...)
 	//b := result1[0].MapRange().Value().(Base)
-	fmt.Println("result1[0].Bytes()", result1[0].Type)
+	fmt.Println("result1[0].Bytes()", result1[0].Interface())
 	//json.Unmarshal(, &b)
 
 	//fmt.Println("result1", b.Rs, b.Err)

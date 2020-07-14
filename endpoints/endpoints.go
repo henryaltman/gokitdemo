@@ -27,8 +27,16 @@ func MakeBasicEndpoint(svc services.Service) endpoint.Endpoint {
 		fmt.Println("req", req)
 		result := dto.BasicResponse{}
 		if callResult := callReflect(svc, req.RequestType, ctx, req.Data); callResult != nil {
-			result.Data = callResult[0]
-			//result.Data = 1
+			callResultByte , _ := json.Marshal(callResult[0].Interface())
+			br := services.BaseResponse{}
+			err = json.Unmarshal(callResultByte,&br)
+			if err != nil {
+				result.Msg = err.Error()
+			}
+			if br.Err != nil {
+				result.Msg = br.Err.Error()
+			}
+			result.Data = br.Rs
 		} else {
 			response, err = nil, errors.New(fmt.Sprintf("not found method %s", req.RequestType))
 		}
@@ -52,7 +60,7 @@ func callReflect(any interface{}, name string, args ...interface{}) []reflect.Va
 		return nil
 	} else {
 		ret := v.Call(inputs)
-		retByte, _ := json.Marshal(ret)
+		retByte, _ := json.Marshal(ret[0].Interface())
 		fmt.Println("ret", string(retByte))
 		return ret
 
