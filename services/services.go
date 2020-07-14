@@ -5,8 +5,8 @@ import (
 )
 
 type BaseResponse struct {
-	Rs  interface{}
-	Err error
+	Rs  interface{} `json:"rs"`
+	Err error       `json:"err"`
 }
 
 type (
@@ -16,7 +16,7 @@ type (
 		Add(context.Context, interface{}) BaseResponse
 
 		// Subtract calculate a-b
-		Subtract(a, b int) (int, error)
+		Subtract(context.Context, interface{}) BaseResponse
 
 		// Multiply calculate a*b
 		Multiply(a, b int) (int, error)
@@ -24,7 +24,7 @@ type (
 		// Divide calculate a/b
 		Divide(a, b int) (int, error)
 
-		Login(name, pwd string) (string, error)
+		Login(context.Context, interface{}) (string)
 	}
 	BasicService struct{}
 )

@@ -3,8 +3,6 @@
 package services
 
 import (
-	"context"
-
 	"github.com/go-kit/kit/log"
 )
 
@@ -19,9 +17,18 @@ func LoggingMiddleware(logger log.Logger) loggingMiddleware {
 	return loggingMiddleware{svc, logger}
 }
 
-func (mw loggingMiddleware) Add(ctx context.Context, r interface{}) BaseResponse {
-	br := BaseResponse{}
-	ret := mw.Service.Add(ctx, r)
-	br.Rs = ret
-	return br
-}
+//func (mw loggingMiddleware) Add(ctx context.Context, r interface{}) BaseResponse {
+//	br := BaseResponse{}
+//	ret := mw.Service.Add(ctx, r)
+//	br.Rs = ret
+//	fmt.Println("br", br)
+//	return br
+//}
+//
+//func (mw loggingMiddleware) Subtract(ctx context.Context, r interface{}) BaseResponse {
+//	br := BaseResponse{}
+//	ret := mw.Service.Subtract(ctx, r)
+//	br.Rs = ret
+//	fmt.Println("br", br)
+//	return br
+//}

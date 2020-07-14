@@ -88,5 +88,12 @@ func MakeKitHttpHandler(ctx context.Context, endpoint endpoint.Endpoint, logger 
 		options...,
 	))
 
+	r.Methods("POST").Path("/login/").Handler(kitHttp.NewServer(
+		endpoint,
+		decodeBasicRequest,
+		encodeBasicResponse,
+		options...,
+	))
+
 	return r
 }
