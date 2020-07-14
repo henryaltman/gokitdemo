@@ -2,14 +2,18 @@ package services
 
 import (
 	"context"
-	"gokitdemo/dto"
 )
+
+type BaseResponse struct {
+	Rs  interface{}
+	Err error
+}
 
 type (
 	Service interface {
 
 		// Add calculate a+b
-		Add(context.Context, dto.AddRequest) (dto.AddResponse, error)
+		Add(context.Context, interface{}) BaseResponse
 
 		// Subtract calculate a-b
 		Subtract(a, b int) (int, error)
