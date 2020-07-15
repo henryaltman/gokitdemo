@@ -7,9 +7,9 @@ package dto
 // }
 
 type BasicRequest struct {
-	RequestId   string
-	RequestType string
-	Data        interface{}
+	RequestId string
+	Path      string //url path
+	Data      interface{}
 }
 
 type BasicResponse struct {

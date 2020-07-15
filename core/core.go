@@ -1,9 +1,8 @@
 package core
 
 import (
-	"errors"
+	"encoding/json"
 	"fmt"
-	"gokitdemo/services"
 	"reflect"
 )
 
@@ -12,18 +11,15 @@ func CallReflect(any interface{}, name string, args ...interface{}) []reflect.Va
 	for i, _ := range args {
 		inputs[i] = reflect.ValueOf(args[i])
 	}
+	fmt.Println("inputs", inputs)
 
 	if v := reflect.ValueOf(any).MethodByName(name); v.String() == "<invalid Value>" {
+		fmt.Println("<invalid Value>")
 		return nil
 	} else {
-		return v.Call(inputs)
+		ret := v.Call(inputs)
+		retByte, _ := json.Marshal(ret[0].Interface())
+		fmt.Println("ret", string(retByte))
+		return ret
 	}
-}
-
-func CallReflectMethod(svc services.Service, method string, args ...interface{}) (res interface{}, err error) {
-	if result := CallReflect(svc, method, args...); result != nil {
-		return result[0], nil
-	}
-	err = errors.New(fmt.Sprintf("not found method %s", method))
-	return nil, err
 }

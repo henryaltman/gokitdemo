@@ -24,7 +24,8 @@ type (
 		// Divide calculate a/b
 		Divide(a, b int) (int, error)
 
-		Login(context.Context, interface{}) (string)
+		Login(context.Context, interface{}) string
+		Default(context.Context, interface{}) BaseResponse
 	}
 	BasicService struct{}
 )
