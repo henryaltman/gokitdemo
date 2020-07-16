@@ -30,15 +30,19 @@ var (
 type TransportBaseReqquesst struct {
 }
 
+//DecodeDefaultRequest is default service request
+func (tbr *TransportBaseReqquesst) DecodeDefaultRequest(data []byte) (dto.BasicRequest, error) {
+	return dto.BasicRequest{Path: "Default", RequestId: "xxx", Request: dto.DefaultRequest{}}, nil
+}
+
+//DecodeAddRequest is add service request
 func (tbr *TransportBaseReqquesst) DecodeAddRequest(data []byte) (dto.BasicRequest, error) {
 	request := dto.AddRequest{}
 	err := json.Unmarshal(data, &request)
 	if err != nil {
 		return dto.BasicRequest{}, err
 	}
-	fmt.Println(request)
-
-	return dto.BasicRequest{Path: "Add", RequestId: "xxx", Data: request}, nil
+	return dto.BasicRequest{Path: "Add", RequestId: "xxx", Request: request}, nil
 }
 
 //DecodeGETRequest is deeal get request
@@ -50,9 +54,12 @@ func (tbr *TransportBaseReqquesst) DecodeGETRequest(r *http.Request) (interface{
 	} else {
 		path = "Default"
 	}
-	fmt.Println("path", path)
-	request := dto.BasicRequest{RequestId: "", Path: path, Data: ""}
-	return request, nil
+	requestMethodName := fmt.Sprintf("Decode%sRequest", path)
+	data := []byte{}
+	if callResult := core.CallReflect(tbr, requestMethodName, data); callResult != nil {
+		return callResult[0].Interface(), nil
+	}
+	return nil, errors.New("read body data error")
 }
 
 //DecodePOSTRequest is deal post request
@@ -68,14 +75,11 @@ func (tbr *TransportBaseReqquesst) DecodePOSTRequest(r *http.Request) (interface
 	} else {
 		path = "Default"
 	}
-	fmt.Println("path", path)
-	//tbr := &TransportBaseReqquesst{}
 	requestMethodName := fmt.Sprintf("Decode%sRequest", path)
 	if callResult := core.CallReflect(tbr, requestMethodName, bodyBytes); callResult != nil {
 		return callResult[0].Interface(), nil
 	}
-	request := dto.BasicRequest{Path: path, Data: bodyBytes}
-	return request, nil
+	return nil, errors.New("read body data error")
 }
 
 // decodeArithmeticRequest decode request params to struct

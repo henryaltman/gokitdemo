@@ -9,7 +9,7 @@ package dto
 type BasicRequest struct {
 	RequestId string
 	Path      string //url path
-	Data      interface{}
+	Request   interface{}
 }
 
 type BasicResponse struct {
@@ -25,6 +25,9 @@ type AddRequest struct {
 
 type AddResponse struct {
 	Sum int `json:"sum"`
+}
+
+type DefaultRequest struct {
 }
 
 type SubstractRequest struct {

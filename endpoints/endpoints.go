@@ -18,7 +18,7 @@ func MakeBasicEndpoint(svc services.Service) endpoint.Endpoint {
 		req := request.(dto.BasicRequest)
 		fmt.Println("req", req)
 		result := dto.BasicResponse{}
-		if callResult := core.CallReflect(svc, req.Path, ctx, req.Data); callResult != nil {
+		if callResult := core.CallReflect(svc, req.Path, ctx, req.Request); callResult != nil {
 			callResultByte, _ := json.Marshal(callResult[0].Interface())
 			br := services.BaseResponse{}
 			err = json.Unmarshal(callResultByte, &br)
