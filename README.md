@@ -7,8 +7,6 @@ post http://127.0.0.1:9000/
 得到如下结果:
 {
      "code": 0,
-     "msg": "OK",
-     "data": {
-          "add": 11
-     }
+     "msg": "",
+     "data": "hello world"
 }
