@@ -33,7 +33,7 @@ func main() {
 
 	endpoint := endpoints.MakeBasicEndpoint(svcs)
 	// add ratelimit,refill every second,set capacity 3
-	ratebucket := ratelimit.NewBucket(time.Second*1, 1)
+	ratebucket := ratelimit.NewBucket(time.Second*1, 100000)
 	endpoint = rtlimit.NewTokenBucketLimitterWithJuju(ratebucket)(endpoint)
 
 	r := transports.MakeKitHttpHandler(ctx, endpoint, logger)

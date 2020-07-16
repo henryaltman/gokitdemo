@@ -15,17 +15,7 @@ type (
 
 		// Add calculate a+b
 		Add(context.Context, dto.AddRequest) BaseResponse
-
-		// Subtract calculate a-b
-		Subtract(context.Context, interface{}) BaseResponse
-
-		// Multiply calculate a*b
-		Multiply(a, b int) (int, error)
-
-		// Divide calculate a/b
-		Divide(a, b int) (int, error)
-
-		Login(context.Context, interface{}) string
+		//default router
 		Default(context.Context, interface{}) BaseResponse
 	}
 	BasicService struct{}
