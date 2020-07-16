@@ -30,6 +30,18 @@ var (
 type TransportBaseReqquesst struct {
 }
 
+func (tbr *TransportBaseReqquesst) DecodeAddRequest(data []byte) (dto.BasicRequest, error) {
+	request := dto.AddRequest{}
+	err := json.Unmarshal(data, &request)
+	if err != nil {
+		return dto.BasicRequest{}, err
+	}
+	fmt.Println(request)
+
+	return dto.BasicRequest{Path: "Add", RequestId: "xxx", Data: request}, nil
+}
+
+//DecodeGETRequest is deeal get request
 func (tbr *TransportBaseReqquesst) DecodeGETRequest(r *http.Request) (interface{}, error) {
 	//首字母设为大写
 	path := strings.ReplaceAll(r.URL.Path, "/", "")
@@ -43,15 +55,11 @@ func (tbr *TransportBaseReqquesst) DecodeGETRequest(r *http.Request) (interface{
 	return request, nil
 }
 
+//DecodePOSTRequest is deal post request
 func (tbr *TransportBaseReqquesst) DecodePOSTRequest(r *http.Request) (interface{}, error) {
 	bodyBytes, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return nil, errors.New("read body data error")
-	}
-	bodyMap := make(map[string]interface{})
-	err = json.Unmarshal(bodyBytes, &bodyMap)
-	if err != nil {
-		return nil, errors.New("parse body data error")
 	}
 	//首字母设为大写
 	path := strings.ReplaceAll(r.URL.Path, "/", "")
@@ -61,7 +69,12 @@ func (tbr *TransportBaseReqquesst) DecodePOSTRequest(r *http.Request) (interface
 		path = "Default"
 	}
 	fmt.Println("path", path)
-	request := dto.BasicRequest{RequestId: bodyMap["request_id"].(string), Path: path, Data: bodyMap["req"]}
+	//tbr := &TransportBaseReqquesst{}
+	requestMethodName := fmt.Sprintf("Decode%sRequest", path)
+	if callResult := core.CallReflect(tbr, requestMethodName, bodyBytes); callResult != nil {
+		return callResult[0].Interface(), nil
+	}
+	request := dto.BasicRequest{Path: path, Data: bodyBytes}
 	return request, nil
 }
 
@@ -72,7 +85,9 @@ func decodeBasicRequest(_ context.Context, r *http.Request) (interface{}, error)
 	fmt.Println("methodName", methodName)
 	tbr := &TransportBaseReqquesst{}
 	if callResult := core.CallReflect(tbr, methodName, r); callResult != nil {
-		return callResult[0].Interface(), nil
+		callRet := callResult[0].Interface()
+		fmt.Println(callRet)
+		return callRet, nil
 	}
 	return nil, ErrorBadRequest
 }
@@ -86,8 +101,6 @@ func encodeBasicResponse(ctx context.Context, w http.ResponseWriter, response in
 // MakeHttpHandler make http handler use mux
 func MakeKitHttpHandler(ctx context.Context, endpoint endpoint.Endpoint, logger log.Logger) http.Handler {
 	r := mux.NewRouter()
-	rBytes, _ := json.Marshal(r)
-	fmt.Println("r", string(rBytes))
 	options := []kitHttp.ServerOption{
 		kitHttp.ServerErrorLogger(logger),
 		kitHttp.ServerErrorEncoder(kitHttp.DefaultErrorEncoder),

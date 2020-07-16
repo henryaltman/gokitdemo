@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"gokitdemo/dto"
 )
 
 type BaseResponse struct {
@@ -13,7 +14,7 @@ type (
 	Service interface {
 
 		// Add calculate a+b
-		Add(context.Context, interface{}) BaseResponse
+		Add(context.Context, dto.AddRequest) BaseResponse
 
 		// Subtract calculate a-b
 		Subtract(context.Context, interface{}) BaseResponse
