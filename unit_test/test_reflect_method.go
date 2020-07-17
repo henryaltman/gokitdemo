@@ -3,12 +3,17 @@ package main
 import (
 	"errors"
 	"fmt"
+	"gokitdemo/auth"
 	"reflect"
 	"strconv"
 )
 
 func main() {
 	callReflectMethod("Chu", 1, 1)
+	token, _ := auth.GeneratorToken(1234)
+	fmt.Println("token", token)
+	//auth.ParseToken(token)
+
 }
 
 type Base struct {

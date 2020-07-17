@@ -5,10 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"gokitdemo/auth"
 	"gokitdemo/core"
-	"gokitdemo/util"
 	"io/ioutil"
-	"strings"
 	//"log"
 	"net/http"
 
@@ -20,6 +19,7 @@ import (
 
 	"github.com/go-kit/kit/log"
 
+	kitJwt "github.com/go-kit/kit/auth/jwt"
 	kitHttp "github.com/go-kit/kit/transport/http"
 )
 
@@ -46,15 +46,9 @@ func (tbr *TransportBaseReqquesst) DecodeAddRequest(data []byte) (dto.BasicReque
 }
 
 //DecodeGETRequest is deeal get request
-func (tbr *TransportBaseReqquesst) DecodeGETRequest(r *http.Request) (interface{}, error) {
+func (tbr *TransportBaseReqquesst) DecodeGETRequest(ctx context.Context, r *http.Request) (interface{}, error) {
 	//首字母设为大写
-	path := strings.ReplaceAll(r.URL.Path, "/", "")
-	if path != "" {
-		path = util.Ucfirst(path)
-	} else {
-		path = "Default"
-	}
-	requestMethodName := fmt.Sprintf("Decode%sRequest", path)
+	requestMethodName := fmt.Sprintf("Decode%sRequest", fmt.Sprintf("%v", ctx.Value(auth.HttpPATH)))
 	data := []byte{}
 	if callResult := core.CallReflect(tbr, requestMethodName, data); callResult != nil {
 		return callResult[0].Interface(), nil
@@ -63,78 +57,78 @@ func (tbr *TransportBaseReqquesst) DecodeGETRequest(r *http.Request) (interface{
 }
 
 //DecodePOSTRequest is deal post request
-func (tbr *TransportBaseReqquesst) DecodePOSTRequest(r *http.Request) (interface{}, error) {
+func (tbr *TransportBaseReqquesst) DecodePOSTRequest(ctx context.Context, r *http.Request) (interface{}, error) {
 	bodyBytes, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return nil, errors.New("read body data error")
 	}
-	//首字母设为大写
-	path := strings.ReplaceAll(r.URL.Path, "/", "")
-	if path != "" {
-		path = util.Ucfirst(path)
-	} else {
-		path = "Default"
-	}
-	requestMethodName := fmt.Sprintf("Decode%sRequest", path)
+	routerPath := ctx.Value(auth.HttpPATH)
+	requestMethodName := fmt.Sprintf("Decode%sRequest", fmt.Sprintf("%v", routerPath))
 	if callResult := core.CallReflect(tbr, requestMethodName, bodyBytes); callResult != nil {
 		return callResult[0].Interface(), nil
 	}
 	return nil, errors.New("read body data error")
 }
 
-// decodeArithmeticRequest decode request params to struct
-func decodeBasicRequest(_ context.Context, r *http.Request) (interface{}, error) {
+// DecodeBasicRequest decode request params to struct
+func DecodeBasicRequest(ctx context.Context, r *http.Request) (interface{}, error) {
 
 	methodName := fmt.Sprintf("Decode%sRequest", r.Method)
-	fmt.Println("methodName", methodName)
 	tbr := &TransportBaseReqquesst{}
-	if callResult := core.CallReflect(tbr, methodName, r); callResult != nil {
-		callRet := callResult[0].Interface()
-		fmt.Println(callRet)
-		return callRet, nil
+	if callResult := core.CallReflect(tbr, methodName, ctx, r); callResult != nil {
+		if callResult[1].Interface() != nil {
+			return callResult[0].Interface(), nil
+		}
+		return callResult[0].Interface(), nil
 	}
 	return nil, ErrorBadRequest
 }
 
-// encodeArithmeticResponse encode response to return
-func encodeBasicResponse(ctx context.Context, w http.ResponseWriter, response interface{}) error {
+// EncodeBasicResponse encode response to return
+func EncodeBasicResponse(ctx context.Context, w http.ResponseWriter, response interface{}) error {
+	w.Header().Set("Access-Control-Allow-Origin", "*")                                                                          //允许访问所有域
+	w.Header().Add("Access-Control-Allow-Headers", "Origin, Content-Type, Authorization, tk, encrypt, authorization, platform") //自定义header头
+	w.Header().Set("Access-Control-Allow-Credentials", "true")                                                                  //允许
+	w.Header().Add("Access-Control-Allow-Methods", "GET, POST, OPTIONS")                                                        //允许接受
 	w.Header().Set("Content-Type", "application/json;charset=utf-8")
 	return json.NewEncoder(w).Encode(response)
 }
 
 // MakeHttpHandler make http handler use mux
-func MakeKitHttpHandler(ctx context.Context, endpoint endpoint.Endpoint, logger log.Logger) http.Handler {
+func MakeKitHttpHandler(_ context.Context, endpoint endpoint.Endpoint, logger log.Logger) http.Handler {
 	r := mux.NewRouter()
 	options := []kitHttp.ServerOption{
 		kitHttp.ServerErrorLogger(logger),
 		kitHttp.ServerErrorEncoder(kitHttp.DefaultErrorEncoder),
+		kitHttp.ServerBefore(
+			kitJwt.HTTPToContext(), auth.HTTPToContext(),
+			auth.LangHTTPToContext(), auth.AuthorizationHTTPToContext()),
 	}
-
 	r.Methods("GET").Path("/").Handler(kitHttp.NewServer(
 		endpoint,
-		decodeBasicRequest,
-		encodeBasicResponse,
+		DecodeBasicRequest,
+		EncodeBasicResponse,
 		options...,
 	))
 
 	r.Methods("POST").Path("/add/").Handler(kitHttp.NewServer(
 		endpoint,
-		decodeBasicRequest,
-		encodeBasicResponse,
+		DecodeBasicRequest,
+		EncodeBasicResponse,
 		options...,
 	))
 
 	r.Methods("POST").Path("/sub/").Handler(kitHttp.NewServer(
 		endpoint,
-		decodeBasicRequest,
-		encodeBasicResponse,
+		DecodeBasicRequest,
+		EncodeBasicResponse,
 		options...,
 	))
 
 	r.Methods("POST").Path("/login/").Handler(kitHttp.NewServer(
 		endpoint,
-		decodeBasicRequest,
-		encodeBasicResponse,
+		DecodeBasicRequest,
+		EncodeBasicResponse,
 		options...,
 	))
 
