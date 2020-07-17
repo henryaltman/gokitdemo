@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"gokitdemo/auth"
 	"gokitdemo/core"
+	"gokitdemo/errorcode"
 	"io/ioutil"
 	//"log"
 	"net/http"
@@ -15,6 +16,7 @@ import (
 
 	//"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/endpoint"
+	//kitEndpoint "github.com/go-kit/kit/endpoint"
 	"github.com/gorilla/mux"
 
 	"github.com/go-kit/kit/log"
@@ -91,7 +93,38 @@ func EncodeBasicResponse(ctx context.Context, w http.ResponseWriter, response in
 	w.Header().Set("Access-Control-Allow-Credentials", "true")                                                                  //允许
 	w.Header().Add("Access-Control-Allow-Methods", "GET, POST, OPTIONS")                                                        //允许接受
 	w.Header().Set("Content-Type", "application/json;charset=utf-8")
+	if f, ok := response.(endpoint.Failer); ok && f.Failed() != nil {
+		businessErrorEncoder(f.Failed(), w)
+		return nil
+	}
+
 	return json.NewEncoder(w).Encode(response)
+}
+
+func encodeError(_ context.Context, err error, w http.ResponseWriter) {
+
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	customErr, ok := err.(errorcode.ErrType)
+	if ok {
+		w.WriteHeader(http.StatusOK)
+		_ = json.NewEncoder(w).Encode(errorcode.BusinessErrorWrapper{
+			Error: customErr.Error(), Code: customErr.GetCode(),
+		})
+	} else {
+		w.WriteHeader(http.StatusInternalServerError)
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{"code": 9100, "error": err.Error()})
+	}
+}
+
+// businessErrorEncoder encode business logic error. for example NotExistErr
+func businessErrorEncoder(err error, w http.ResponseWriter) {
+
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	customErr := err.(errorcode.ErrType)
+	_ = json.NewEncoder(w).Encode(errorcode.BusinessErrorWrapper{
+		Error: customErr.Error(), Code: customErr.GetCode(),
+	})
 }
 
 // MakeHttpHandler make http handler use mux
@@ -99,7 +132,7 @@ func MakeKitHttpHandler(_ context.Context, endpoint endpoint.Endpoint, logger lo
 	r := mux.NewRouter()
 	options := []kitHttp.ServerOption{
 		kitHttp.ServerErrorLogger(logger),
-		kitHttp.ServerErrorEncoder(kitHttp.DefaultErrorEncoder),
+		kitHttp.ServerErrorEncoder(encodeError),
 		kitHttp.ServerBefore(
 			kitJwt.HTTPToContext(), auth.HTTPToContext(),
 			auth.LangHTTPToContext(), auth.AuthorizationHTTPToContext()),

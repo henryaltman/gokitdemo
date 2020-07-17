@@ -7,6 +7,7 @@ import (
 	"gokitdemo/auth"
 	"gokitdemo/core"
 	"gokitdemo/dto"
+	"gokitdemo/errorcode"
 	"gokitdemo/services"
 
 	"github.com/go-kit/kit/endpoint"
@@ -20,17 +21,12 @@ func MakeBasicEndpoint(svc services.Service) endpoint.Endpoint {
 		//verify token
 		_, err = auth.VerifyToken(ctx)
 		if err != nil {
-			result.Msg = err.Error()
-			fmt.Println(fmt.Sprintf("MakeBasicEndpoint err %v", result))
-			response = result
-			return response, nil
+			return result, errorcode.TokenExpired
 		}
 		//verify token
 
 		if request == nil {
-			result.Msg = "request error"
-			response = result
-			return
+			return result, errorcode.RequestErr
 		}
 		req := request.(dto.BasicRequest)
 		if callResult := core.CallReflect(svc, req.Path, ctx, req.Request); callResult != nil {
@@ -38,6 +34,7 @@ func MakeBasicEndpoint(svc services.Service) endpoint.Endpoint {
 			if br.Err != nil {
 				result.Msg = br.Err.Error()
 			}
+			err = br.Err
 			result.Data = br.Rs
 		} else {
 			response, err = nil, errors.New(fmt.Sprintf("not found method %s", req.Path))
@@ -46,6 +43,6 @@ func MakeBasicEndpoint(svc services.Service) endpoint.Endpoint {
 			result.Msg = err.Error()
 		}
 		response = result
-		return
+		return result, err
 	}
 }

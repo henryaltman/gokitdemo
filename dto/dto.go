@@ -29,3 +29,5 @@ type AddResponse struct {
 type DefaultRequest struct {
 	Base
 }
+
+func (r DefaultRequest) Failed() error { return r.Failed() }
