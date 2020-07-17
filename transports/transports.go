@@ -8,6 +8,7 @@ import (
 	"gokitdemo/auth"
 	"gokitdemo/core"
 	"gokitdemo/errorcode"
+	"gokitdemo/router"
 	"io/ioutil"
 	//"log"
 	"net/http"
@@ -137,33 +138,15 @@ func MakeKitHttpHandler(_ context.Context, endpoint endpoint.Endpoint, logger lo
 			kitJwt.HTTPToContext(), auth.HTTPToContext(),
 			auth.LangHTTPToContext(), auth.AuthorizationHTTPToContext()),
 	}
-	r.Methods("GET").Path("/").Handler(kitHttp.NewServer(
-		endpoint,
-		DecodeBasicRequest,
-		EncodeBasicResponse,
-		options...,
-	))
-
-	r.Methods("POST").Path("/add/").Handler(kitHttp.NewServer(
-		endpoint,
-		DecodeBasicRequest,
-		EncodeBasicResponse,
-		options...,
-	))
-
-	r.Methods("POST").Path("/sub/").Handler(kitHttp.NewServer(
-		endpoint,
-		DecodeBasicRequest,
-		EncodeBasicResponse,
-		options...,
-	))
-
-	r.Methods("POST").Path("/login/").Handler(kitHttp.NewServer(
-		endpoint,
-		DecodeBasicRequest,
-		EncodeBasicResponse,
-		options...,
-	))
-
+	//开始初始化路由
+	for _, routerMap := range router.Router {
+		r.Methods(routerMap.Method).Path(routerMap.Path).Handler(kitHttp.NewServer(
+			endpoint,
+			DecodeBasicRequest,
+			EncodeBasicResponse,
+			options...,
+		))
+	}
+	//结束初始化路由
 	return r
 }
