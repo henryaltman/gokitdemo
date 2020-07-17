@@ -16,6 +16,8 @@ import (
 
 	"github.com/go-kit/kit/log"
 	"github.com/juju/ratelimit"
+
+	_ "net/http/pprof"
 )
 
 func main() {
@@ -42,6 +44,9 @@ func main() {
 		fmt.Println("Http Server start at port:9000")
 		handler := r
 		errChan <- http.ListenAndServe(":9000", handler)
+	}()
+	go func() {
+		http.ListenAndServe("0.0.0.0:6060", nil)
 	}()
 
 	go func() {
