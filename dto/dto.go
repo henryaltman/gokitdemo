@@ -3,6 +3,10 @@ package dto
 type Base struct {
 	UserId int
 }
+type BaseResponse struct {
+	Rs  interface{} `json:"rs"`
+	Err error       `json:"err"`
+}
 
 type BasicRequest struct {
 	RequestId string

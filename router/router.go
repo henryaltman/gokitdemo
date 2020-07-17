@@ -1,11 +1,11 @@
 package router
 
 //需要token
-var RouterToken = map[string]bool{
-	"Add": true,
+
+type R struct {
+	VerifyToken bool
 }
 
-//不需要token
-var RouterWithoutToken = map[string]bool{
-	"/": true,
+var Router = map[string]R{
+	"Add": {VerifyToken: false},
 }

@@ -30,7 +30,7 @@ func MakeBasicEndpoint(svc services.Service) endpoint.Endpoint {
 		}
 		req := request.(dto.BasicRequest)
 		if callResult := core.CallReflect(svc, req.Path, ctx, req.Request); callResult != nil {
-			br := callResult[0].Interface().(services.BaseResponse)
+			br := callResult[0].Interface().(dto.BaseResponse)
 			if br.Err != nil {
 				result.Msg = br.Err.Error()
 			}

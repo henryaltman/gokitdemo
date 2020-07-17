@@ -62,12 +62,18 @@ func GetUidFromContext(tokenString string) (int, error) {
 
 //验证token
 func VerifyToken(ctx context.Context) (bool, error) {
+
 	httpPath := ctx.Value(HttpPATH)
 	httpPathString := fmt.Sprintf("%v", httpPath)
+
 	httpPathString = util.Ucfirst(httpPathString)
-	if _, ok := router.RouterWithoutToken[httpPathString]; ok {
-		return true, nil
+
+	if isVerifyToken, ok := router.Router[httpPathString]; ok {
+		if !isVerifyToken.VerifyToken {
+			return true, nil
+		}
 	}
+
 	jWTtoken := ctx.Value(kitJwt.JWTTokenContextKey)
 	tokenString := fmt.Sprintf("%v", jWTtoken)
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {

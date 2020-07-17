@@ -5,18 +5,13 @@ import (
 	"gokitdemo/dto"
 )
 
-type BaseResponse struct {
-	Rs  interface{} `json:"rs"`
-	Err error       `json:"err"`
-}
-
 type (
 	Service interface {
 
 		// Add calculate a+b
-		Add(context.Context, dto.AddRequest) BaseResponse
+		Add(context.Context, dto.AddRequest) dto.BaseResponse
 		//default router
-		Default(context.Context, interface{}) BaseResponse
+		Default(context.Context, interface{}) dto.BaseResponse
 	}
 	BasicService struct{}
 )
