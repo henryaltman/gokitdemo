@@ -2,26 +2,52 @@ package core
 
 import (
 	"database/sql"
-	_ "github.com/go-sql-driver/mysql"
 	"log"
+	"sync"
+
+	_ "github.com/go-sql-driver/mysql"
 )
 
-var db *sql.DB
+type application struct {
+	Db *sql.DB
+	Mu sync.Mutex
+}
 
-type application struct{}
+var (
+	db  *sql.DB
+	app = &application{}
+)
 
 func init() {
-	db, err := sql.Open("mysql",
-		"user:password@tcp(127.0.0.1:3306)/hello")
+	//fmt.Println("init")
+	app.Db = newDB()
+	//fmt.Println("db",app.Db)
+}
+
+func newDB() *sql.DB {
+	db, err := sql.Open("mysql", "root:123456@tcp(localhost:3306)/gokitdemo")
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
-	defer db.Close()
+	if err = db.Ping(); err != nil {
+		panic(err.Error())
+	}
+	return db
 }
 
-func Instance() {
+func Instance() *application {
 
-}
-func GetOne() {
-
+	if app.Db != nil {
+		//fmt.Println("db instance is not null")
+		if err := app.Db.Ping(); err != nil {
+			app.Mu.Lock()
+			app.Db = newDB()
+			app.Mu.Unlock()
+		}
+		return app
+	}
+	app.Mu.Lock()
+	app.Db = newDB()
+	app.Mu.Unlock()
+	return app
 }
